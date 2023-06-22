@@ -1,0 +1,66 @@
+version: '3.9'
+
+services:
+  websockets:
+    image: stplaton/yotemi-websockets:0.0.4
+    container_name: yotemi_websockets
+    restart: always
+    tty: true
+    env_file:
+      - .websockets.env
+    ports:
+      - "3031:3031"
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - "node.labels.TAG==prod"
+
+  api:
+    image: stplaton/yotemi-api:0.0.11
+    container_name: yotemi_api
+    restart: always
+    tty: true
+    env_file:
+      - .api.env
+    depends_on:
+      - websockets
+    ports:
+      - "3030:3030"
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - "node.labels.TAG==prod"
+
+  front:
+    image: stplaton/yotemi-front:0.0.15
+    container_name: yotemi_front
+    restart: always
+    tty: true
+    env_file:
+      - .front.env
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - "node.labels.TAG==prod"
+
+  admin:
+    image: stplaton/yotemi-admin:0.0.1
+    container_name: yotemi_admin
+    restart: always
+    tty: true
+    depends_on:
+      - api
+    ports:
+      - "3001:80"
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - "node.labels.TAG==prod"
